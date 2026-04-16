@@ -1,0 +1,47 @@
+services:
+  database:
+    build: ./database
+    container_name: db-host
+    networks:
+      - backend-network # Isolé du front
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./simple-api-student-main
+    networks:
+      - frontend-network 
+      - backend-network  
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: on-failure
+
+  httpd:
+    build: ./HTTP
+    ports:
+      - "80:80"
+    networks:
+      - frontend-network 
+    depends_on:
+      - backend
+    restart: always
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+
+volumes:
+  postgres_db:
