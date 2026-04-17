@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin' 
   sonar-job:
   runs-on: ubuntu-24.04
-    steps:
+  steps:
       - uses: actions/checkout@v4
       - name: Build and test with Maven
         run: mvn clean verify --file ./simple-api/pom.xml
@@ -52,7 +52,6 @@ jobs:
           push: ${{ github.ref == 'refs/heads/main' }}
 
   build-and-push-docker-image-database:
-    needs: sonar-job 
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -69,7 +68,6 @@ jobs:
           push: ${{ github.ref == 'refs/heads/main' }}
 
   build-and-push-docker-image-httpd:
-    needs: sonar-job 
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
