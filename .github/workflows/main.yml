@@ -18,20 +18,30 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin' 
+      - name: Build and test with Maven
+        run : mvn clean verify --file ./simple-api/pom.xml
   sonar-job:
     needs: test-backend
     runs-on: ubuntu-24.04
     steps:
-        - uses: actions/checkout@v4
-        - name: Build and test with Maven
-          run: mvn clean verify --file ./simple-api/pom.xml
-        - name : SonnarQube Scan
-          run: mvn -B verify sonar:sonar 
-              -Dsonar.projectKey=schrk06_tp_github_devops_mlops
-              -Dsonar.organization=schrk06
-              -Dsonar.host.url=https://sonarcloud.io 
-              -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file ./simple-api/pom.xml
-              -Dsonar.qualitygate.wait=true
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin' 
+  
+      - uses: actions/checkout@v4
+      - name: Build and test with Maven
+        run: mvn clean verify --file ./simple-api/pom.xml
+      - name : SonnarQube Scan
+        run: mvn -B verify sonar:sonar 
+            -Dsonar.projectKey=schrk06_tp_github_devops_mlops
+            -Dsonar.organization=schrk06
+            -Dsonar.host.url=https://sonarcloud.io 
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file ./simple-api/pom.xml
+            -Dsonar.qualitygate.wait=true
 
 
 
