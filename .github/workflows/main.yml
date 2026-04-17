@@ -19,18 +19,18 @@ jobs:
           java-version: '21'
           distribution: 'temurin' 
   sonar-job:
-  runs-on: ubuntu-24.04
-  steps:
-      - uses: actions/checkout@v4
-      - name: Build and test with Maven
-        run: mvn clean verify --file ./simple-api/pom.xml
-      - name : SonnarQube Scan
-        run: mvn -B verify sonar:sonar 
-            -Dsonar.projectKey=schrk06_tp_github_devops_mlops
-            -Dsonar.organization=schrk06
-            -Dsonar.host.url=https://sonarcloud.io 
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file ./simple-api/pom.xml
-            -Dsonar.qualitygate.wait=true
+    runs-on: ubuntu-24.04
+    steps:
+        - uses: actions/checkout@v4
+        - name: Build and test with Maven
+          run: mvn clean verify --file ./simple-api/pom.xml
+        - name : SonnarQube Scan
+          run: mvn -B verify sonar:sonar 
+              -Dsonar.projectKey=schrk06_tp_github_devops_mlops
+              -Dsonar.organization=schrk06
+              -Dsonar.host.url=https://sonarcloud.io 
+              -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file ./simple-api/pom.xml
+              -Dsonar.qualitygate.wait=true
 
 
 
