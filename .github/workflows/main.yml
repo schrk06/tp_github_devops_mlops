@@ -18,7 +18,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin' 
-
+  sonar-job:
+  runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
       - name: Build and test with Maven
         run: mvn clean verify --file ./simple-api/pom.xml
       - name : SonnarQube Scan
@@ -27,11 +30,12 @@ jobs:
             -Dsonar.organization=schrk06
             -Dsonar.host.url=https://sonarcloud.io 
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file ./simple-api/pom.xml
+            -Dsonar.qualitygate.wait=true
 
 
 
-  build-and-push-docker-image:
-    needs: test-backend # On attend que test-backend soit vert !
+  build-and-push-docker-image-backend:
+    needs: sonar-job 
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -47,6 +51,16 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:latest
           push: ${{ github.ref == 'refs/heads/main' }}
 
+  build-and-push-docker-image-database:
+    needs: sonar-job 
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+  
       - name: Build image and push database
         uses: docker/build-push-action@v6
         with:
@@ -54,6 +68,16 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:latest
           push: ${{ github.ref == 'refs/heads/main' }}
 
+  build-and-push-docker-image-httpd:
+    needs: sonar-job 
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      
       - name: Build image and push httpd
         uses: docker/build-push-action@v6
         with:
