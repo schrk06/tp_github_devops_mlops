@@ -96,7 +96,7 @@ jobs:
   
   deploy:
     # Ce job s'exécute uniquement si les images Docker ont bien été pushées
-    needs: [build-and-push-docker-image-backend, build-and-push-docker-image-database, build-and-push-docker-image-httpd]
+    needs: [build-and-push-docker-image-backend, build-and-push-docker-image-database, build-and-push-docker-image-httpd, build-and-push-docker-image-front]
     runs-on: ubuntu-24.04
     if: github.ref == 'refs/heads/main'
 
@@ -125,3 +125,18 @@ jobs:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
           ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml -u admin --private-key ~/.ssh/id_rsa
+  build-and-push-docker-image-front:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      
+      - name: Build image and push front
+        uses: docker/build-push-action@v6
+        with:
+          context: ./devops-front-main
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-front:latest
+          push: ${{ github.ref == 'refs/heads/main' }}
