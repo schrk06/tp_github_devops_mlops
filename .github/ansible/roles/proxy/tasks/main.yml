@@ -1,0 +1,11 @@
+---
+# tasks file for roles/proxy
+- name: Run HTTPD Proxy
+  docker_container:
+    name: httpd-proxy
+    image: schrk06/tp-devops-httpd:latest
+    networks:
+      - name: app-network
+    restart_policy: always
+    ports:
+      - "80:80"
