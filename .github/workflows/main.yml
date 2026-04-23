@@ -94,3 +94,34 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
           push: ${{ github.ref == 'refs/heads/main' }}
   
+  deploy:
+    # Ce job s'exécute uniquement si les images Docker ont bien été pushées
+    needs: [build-and-push-docker-image-backend, build-and-push-docker-image-database, build-and-push-docker-image-httpd]
+    runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Ansible
+        run: pip install ansible
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ANSIBLE_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # Permet à GitHub Actions de faire confiance à ton serveur sans bloquer
+          ssh-keyscan -H salim.charikh.takima.school >> ~/.ssh/known_hosts
+
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml -u admin --private-key ~/.ssh/id_rsa
