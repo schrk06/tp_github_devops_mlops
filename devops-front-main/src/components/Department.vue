@@ -53,27 +53,22 @@ export default {
   computed: {
     name() {
       return this.$route.params.name;
-    },
-    // On centralise l'URL de base pour plus de clarté
-    apiBaseUrl() {
-      return process.env.VUE_APP_API_URL;
     }
   },
   mounted: function() {
     if (this.name) {
-      // Utilisation du chemin relatif (ex: /api/departments/...) 
-      fetch(`${this.apiBaseUrl}/departments/${this.name}/students`)
+      fetch(`http://${process.env.VUE_APP_API_URL}/departments/${this.name}/students`)
         .then(response => response.json())
         .then(data => (this.students = data));
     }
-    
-    fetch(`${this.apiBaseUrl}/departments/${this.name}`)
+    // get department id
+    fetch(`http://${process.env.VUE_APP_API_URL}/departments/${this.name}`)
       .then(response => response.json())
       .then(data => (this.currentDepartment = data));
   },
   methods: {
     async addStudent() {
-      await fetch(`${this.apiBaseUrl}/students`, {
+      await fetch(`http://${process.env.VUE_APP_API_URL}/students`, {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -88,20 +83,15 @@ export default {
           }
         })
       });
-
-      // Rafraîchissement de la liste
-      fetch(`${this.apiBaseUrl}/departments/${this.name}/students`)
+      fetch(`http://${process.env.VUE_APP_API_URL}/departments/${this.name}/students`)
         .then(response => response.json())
         .then(data => (this.students = data));
-      
-      // Reset du formulaire
-      this.firstname = "";
-      this.lastname = "";
     }
   }
 };
 </script>
 
+<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .hr {
     margin-top: 5px;
