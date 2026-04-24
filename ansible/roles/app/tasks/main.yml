@@ -1,9 +1,9 @@
 ---
-# tasks file for roles/app
-- name: Run Backend App
+# tasks file for roles/database
+- name: Run Database
   docker_container:
-    name: backend
-    image: schrk06/tp-devops-simple-api:latest
+    name: db-host
+    image: schrk06/tp-devops-database:latest
     networks:
       - name: app-network
     restart_policy: always
