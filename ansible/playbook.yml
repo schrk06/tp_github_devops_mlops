@@ -5,6 +5,6 @@
     - docker
     - network
     - database
-    - backend
+    - app
     - front
     - proxy
