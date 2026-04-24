@@ -103,6 +103,7 @@ jobs:
     needs: [build-and-push-docker-image-backend, build-and-push-docker-image-database, build-and-push-docker-image-httpd, build-and-push-docker-image-front]
     runs-on: ubuntu-24.04
     if: github.ref == 'refs/heads/main'
+    environment: manual-deployment
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
