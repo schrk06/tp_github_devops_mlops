@@ -12,38 +12,35 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin' 
       - name: Build and test with Maven
-        run : mvn clean verify --file ./simple-api/pom.xml
+        run: mvn clean verify --file ./simple-api/pom.xml
+
   sonar-job:
     needs: test-backend
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin' 
-  
-      - uses: actions/checkout@v4
       - name: Build and test with Maven
         run: mvn clean verify --file ./simple-api/pom.xml
-      - name : SonnarQube Scan
-        run: mvn -B verify sonar:sonar 
-            -Dsonar.projectKey=schrk06_tp_github_devops_mlops
-            -Dsonar.organization=schrk06
-            -Dsonar.host.url=https://sonarcloud.io 
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file ./simple-api/pom.xml
-            -Dsonar.qualitygate.wait=true
-
-
+      - name: SonnarQube Scan
+        run: |
+          mvn -B verify sonar:sonar \
+          -Dsonar.projectKey=schrk06_tp_github_devops_mlops \
+          -Dsonar.organization=schrk06 \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+          --file ./simple-api/pom.xml \
+          -Dsonar.qualitygate.wait=true
 
   build-and-push-docker-image-backend:
     needs: sonar-job 
@@ -51,10 +48,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-
       - name: Build image and push backend
         uses: docker/build-push-action@v6
         with:
@@ -67,10 +62,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-  
       - name: Build image and push database
         uses: docker/build-push-action@v6
         with:
@@ -83,60 +76,50 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-      
       - name: Build image and push httpd
         uses: docker/build-push-action@v6
         with:
           context: ./httpd
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
           push: ${{ github.ref == 'refs/heads/main' }}
-  
-  deploy:
-    # Ce job s'exécute uniquement si les images Docker ont bien été pushées
-    needs: [build-and-push-docker-image-backend, build-and-push-docker-image-database, build-and-push-docker-image-httpd, build-and-push-docker-image-front]
-    runs-on: ubuntu-24.04
-    if: github.ref == 'refs/heads/main'
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install Ansible
-        run: pip install ansible
-
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ANSIBLE_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          # Permet à GitHub Actions de faire confiance à ton serveur sans bloquer
-          ssh-keyscan -H salim.charikh.takima.school >> ~/.ssh/known_hosts
-
-      - name: Run Ansible Playbook
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
-        run: |
-          ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml -u admin --private-key ~/.ssh/id_rsa
   build-and-push-docker-image-front:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-      
       - name: Build image and push front
         uses: docker/build-push-action@v6
         with:
           context: ./devops-front-main
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-front:latest
           push: ${{ github.ref == 'refs/heads/main' }}
+
+  deploy:
+    needs: [build-and-push-docker-image-backend, build-and-push-docker-image-database, build-and-push-docker-image-httpd, build-and-push-docker-image-front]
+    runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Ansible
+        run: pip install ansible
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ANSIBLE_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H salim.charikh.takima.school >> ~/.ssh/known_hosts
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml -u admin --private-key ~/.ssh/id_rsa
