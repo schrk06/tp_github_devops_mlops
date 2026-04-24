@@ -1,39 +1,50 @@
+version: '3.8'
+
 services:
   database:
     build: ./database
-    container_name: db-host
+    container_name: db-host # Ton backend s'attend à communiquer avec "db-host"
     networks:
-      - backend-network # Isolé du front
-    environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - backend-network # Isolé du proxy et du front
+    env_file:
+      - .env # Charge automatiquement les variables de ton fichier .env à la racine
     volumes:
       - postgres_db:/var/lib/postgresql/data
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      # J'ai ajouté des valeurs de secours (usr et db) au cas où le .env ne se charge pas bien
+      test: ["CMD-SHELL", "pg_isready -U $${DB_USER:-usr} -d $${DB_NAME:-db}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   backend:
-    build: ./simple-api-student-main
+    build: ./simple-api # Corrigé : c'était "./simple-api-student-main" avant
+    container_name: simple-api
     networks:
-      - frontend-network 
-      - backend-network  
+      - frontend-network # Pour communiquer avec le proxy (si besoin)
+      - backend-network  # Pour communiquer avec la BDD
     depends_on:
       database:
         condition: service_healthy
     restart: on-failure
 
+  frontend: # NOUVEAU : C'est le nom exact que ton Apache cherche (ProxyPass / http://frontend:80/)
+    build: ./devops-front-main
+    container_name: frontend
+    networks:
+      - frontend-network # Dans le même réseau que le proxy
+    restart: on-failure
+
   httpd:
-    build: ./HTTP
+    build: ./httpd # Corrigé : c'était "./HTTP" avant
+    container_name: httpd
     ports:
       - "80:80"
     networks:
       - frontend-network 
     depends_on:
+      - frontend
       - backend
     restart: always
 
