@@ -7,7 +7,7 @@ on:
       - develop
   pull_request:
   workflow_dispatch:
-    
+
 jobs:
   test-backend: 
     runs-on: ubuntu-24.04
@@ -97,7 +97,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./devops-front-main
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-front:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-front-new:latest
           push: ${{ github.ref == 'refs/heads/main' }}
 
   deploy:
@@ -125,3 +125,5 @@ jobs:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
           ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml -u admin --private-key ~/.ssh/id_rsa
+
+          
