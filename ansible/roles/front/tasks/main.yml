@@ -1,0 +1,9 @@
+---
+# tasks file for roles/front
+- name: Run Frontend App
+  docker_container:
+    name: frontend
+    image: schrk06/tp-devops-front:latest
+    networks:
+      - name: app-network
+    restart_policy: always
