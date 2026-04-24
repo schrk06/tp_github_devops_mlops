@@ -1,13 +1,9 @@
 ---
-# tasks file for roles/database
-- name: Run Database
+# tasks file for roles/app
+- name: Run Backend App
   docker_container:
-    name: db-host
-    image: schrk06/tp-devops-database:latest
+    name: simple-api # Le nom de ton backend sur le réseau
+    image: schrk06/tp-devops-simple-api:latest # L'image de ton API !
     networks:
       - name: app-network
     restart_policy: always
-    env:
-      POSTGRES_DB: db
-      POSTGRES_USER: usr
-      POSTGRES_PASSWORD: pwd
