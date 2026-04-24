@@ -126,4 +126,5 @@ jobs:
         run: |
           ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml -u admin --private-key ~/.ssh/id_rsa
 
+
           
