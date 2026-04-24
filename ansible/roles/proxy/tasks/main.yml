@@ -4,6 +4,7 @@
   docker_container:
     name: httpd-proxy
     image: schrk06/tp-devops-httpd:latest
+    pull: true
     networks:
       - name: app-network
     restart_policy: always

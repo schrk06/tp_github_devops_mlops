@@ -4,6 +4,7 @@
   docker_container:
     name: frontend
     image: schrk06/tp-devops-front-new:latest
+    pull: true
     networks:
       - name: app-network
     restart_policy: always
